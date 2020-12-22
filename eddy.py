@@ -4,7 +4,6 @@ import numpy as np
 import struct as st
 
 # -------------------------------------------------------------
-# -------------------------------------------------------------
 
 def readgrid(filename):
 
@@ -107,7 +106,7 @@ def loc(v, a):
 # -------------------------------------------------------------
 
 
-def readres(filename,arrangement='F'):
+def readres(filename):
     # remember: f.seek(),f.tell()
 
     f = open(filename, 'rb')
@@ -120,7 +119,7 @@ def readres(filename,arrangement='F'):
 
         dummy1 = st.unpack('i', f.read(4))
         data[:, :, kk] = np.reshape(
-            st.unpack('d'*i*j, f.read(8*i*j)), (i, j), order=arrangement)
+            st.unpack('d'*i*j, f.read(8*i*j)), (i, j), order='F')
         dummy2 = st.unpack('i', f.read(4))
 
         if dummy1 != dummy2:
@@ -168,7 +167,7 @@ def azi_grid(ny):
     xe = dth*np.arange(ny)
     xc = xe-dth/2
 
-    return xe[1],xc[1]
+    return xe, xc
 
 # ----------------------------------------------------------------------
 
@@ -255,7 +254,7 @@ def grid5p(filename, kmin5p, kmax5p, skip):
 
 # ---------------------------------------------------------------------------
 
-def read5pSqueeze(filename, kmin5p, kmax5p, skip):
+def read5pSqueeze_old(filename, kmin5p, kmax5p, skip):
 
     f = open(filename, 'rb')
 
@@ -289,9 +288,59 @@ def read5pSqueeze(filename, kmin5p, kmax5p, skip):
     return i, j, k, it, time, dt, grav, kmin5p, kmax5p, nzg, data
 
 
+def read5pSqueeze(filename, kmin5p, kmax5p, skip):
+
+    f = open(filename, 'rb')
+
+    _, i, j, k, jp, _ = st.unpack('6i', f.read(24))
+    nxny = i*j
+    kpoints = (kmax5p-kmin5p+1)
+    var = '1i'+str(nxny)+'d1i'
+    sizeVar = st.calcsize('='+var)
+
+    # do not read # of "skip" blocks of 5 planes
+    f.seek(24+kpoints*sizeVar+skip*5*sizeVar)
+
+    nb = int((k-kpoints-skip*5)/5+1)
+    data = np.zeros([nb-1, j, i],dtype=float)
+    #print('What')
+    for b in range(0, nb-1):
+
+        f.seek(2*sizeVar, 1)
+        dummy1 = st.unpack('i', f.read(4))
+        data[b,:, :] = np.reshape(
+            st.unpack('d'*i*j, f.read(8*i*j)), (j, i), order='C')
+
+       # datatmp= np.reshape(st.unpack('d'*i*j, f.read(8*i*j)),
+       # (j, i), order='F')
+   
+       # data[b,:,:]=datatmp
+
+        dummy2 = st.unpack('i', f.read(4))
+        f.seek(2*sizeVar, 1)
+
+        if dummy1 != dummy2:
+            print('Error reading', kk)
+            break
+
+    _, it, _, _, time, _, _, dt, grav, _, _, kmin5p, kmax5p, nzg = st.unpack(
+        'iiiidiiddiiiii', f.read(4*11+3*8))
+
+    data=np.swapaxes(data,0,2)
+
+    #print(data.shape)
+
+    return i, j, k, it, time, dt, grav, kmin5p, kmax5p, nzg, data
+
+
+
+
+
+
+
 # ----------------------------------------------------------------------------------
 
-def read5pSlice(filename,kmin5p,kmax5p,skip):
+def read5pSlice_old(filename,kmin5p,kmax5p,skip):
 #remember: f.seek(),f.tell()
 #skip a chunk of the 5p files but still read the 5 planes
 
@@ -325,6 +374,47 @@ def read5pSlice(filename,kmin5p,kmax5p,skip):
 
 
         return i,j,k,it,time,dt,grav,kmin5p,kmax5p,nzg,data
+
+# ----------------------------------------------------------------------------------
+
+def read5pSlice(filename,kmin5p,kmax5p,skip):
+#remember: f.seek(),f.tell()
+#skip a chunk of the 5p files but still read the 5 planes
+
+        f = open(filename,'rb')
+
+        _,i,j,k,jp,_ = st.unpack('i'*6,f.read(24))
+
+        nxny=i*j
+        kpoints=(kmax5p-kmin5p+1)
+        var='1i'+str(nxny)+'d1i'
+        sizeVar=st.calcsize('='+var)
+
+        #do not read # of "skip" blocks of 5 planes
+        f.seek(24+kpoints*sizeVar+skip*5*sizeVar)
+
+        nb=int(k-kpoints-skip*5+1)
+
+        data=np.zeros([nb-1,j,i],dtype=float)
+
+        for kk in range (0,nb-1):
+
+                dummy1 = st.unpack('i',f.read(4))
+                data[kk,:,:]=np.reshape(st.unpack('d'*i*j,f.read(8*i*j)),(j,i),order='C')
+                dummy2 = st.unpack('i',f.read(4))
+
+                if dummy1!=dummy2:
+                        print('Error reading',kk)
+                        break
+
+        _,it,_,_,time,_,_,dt,grav,_,_,kmin5p,kmax5p,nzg=st.unpack('iiiidiiddiiiii',f.read(4*11+3*8))
+
+
+        data=np.swapaxes(data,0,2)
+
+        return i,j,k,it,time,dt,grav,kmin5p,kmax5p,nzg,data
+
+
 
 
 
@@ -398,10 +488,8 @@ def cyl2car(Ucyl, Vcyl, rc, thc):
     cosTh = np.cos(thc)
     sinTh = np.sin(thc)
 
-    UcCar = Ucyl*cosTh[np.newaxis, :, np.newaxis]-rc[:,
-                                                     np.newaxis, np.newaxis]*sinTh[np.newaxis, :, np.newaxis]*Vcyl
-    VcCar = Ucyl*sinTh[np.newaxis, :, np.newaxis]+rc[:,
-                                                     np.newaxis, np.newaxis]*cosTh[np.newaxis, :, np.newaxis]*Vcyl
+    UcCar = Ucyl*cosTh[np.newaxis, :, np.newaxis]-sinTh[np.newaxis, :, np.newaxis]*Vcyl
+    VcCar = Ucyl*sinTh[np.newaxis, :, np.newaxis]+cosTh[np.newaxis, :, np.newaxis]*Vcyl
 
     return UcCar, VcCar
 
