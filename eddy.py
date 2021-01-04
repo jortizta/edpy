@@ -105,8 +105,34 @@ def loc(v, a):
 
 # -------------------------------------------------------------
 
+def readres(filename,arrangement='F'):
+    # remember: f.seek(),f.tell()
 
-def readres(filename):
+    f = open(filename, 'rb')
+
+    _, i, j, k, jp, _ = st.unpack('i'*6, f.read(24))
+
+    data = np.zeros([k, j, i], dtype=float)
+
+    for kk in range(0, k):
+
+        dummy1 = st.unpack('i', f.read(4))
+        data[kk,:, :] = np.reshape(
+            st.unpack('d'*i*j, f.read(8*i*j)), (j, i), order=arrangement)
+        dummy2 = st.unpack('i', f.read(4))
+
+        if dummy1 != dummy2:
+            print('Error reading', kk)
+            break
+
+    _, it, _, _, time, _, _, dt, grav, _ = st.unpack(
+        'iiiidiiddi', f.read(4*7+3*8))
+
+    data=np.swapaxes(data,0,2)
+    return i, j, k, it, time, dt, grav, data
+
+#------------------------------------------------------------
+def readres_old(filename):
     # remember: f.seek(),f.tell()
 
     f = open(filename, 'rb')
@@ -558,7 +584,33 @@ def center(dataU, dataV, dataW):
 
 # ----------------------------------------------------------------------------
 
+
 def centerUV(dataU, dataV):
+
+    i,j,k=dataU.shape
+
+    _,jsym,_,_=azi_grid(j)
+
+    # Center velocity
+
+    dataUc = np.zeros([i, j, k])
+    dataUc[1:, ] = 0.5*(dataU[0:-1, ]+dataU[1:, ])
+
+    dataVc = np.zeros([i, j, k])
+    dataVc[:, 1:, ] = 0.5*(dataV[:, 1:, ]+dataV[:, 0:-1, ])
+
+    dataUc[0, :, :] = dataU[1,jsym, :]
+    dataVc[:, 0, :] = dataV[:,-2, :]
+
+    return dataUc, dataVc
+
+# --------------------------------------------------------------------------
+
+
+
+
+
+def centerUV_old(dataU, dataV):
 
     i,j,k=dataU.shape
 
@@ -575,6 +627,6 @@ def centerUV(dataU, dataV):
 
     return dataUc, dataVc
 
-
+#---------------------------------------------------------------------------
 
 
