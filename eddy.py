@@ -483,6 +483,9 @@ def readresSlice(filename, kmin, kmax):
 
 def diff_cyl2car(dUdR, dUdTh, rc, thc, i, j, k):
 
+
+    _,jsym,_,_=azi_grid(j)
+
     # note that the velocity is centered
     dUdX = np.zeros([i, j, k])
     dUdY = np.zeros([i, j, k])
@@ -498,6 +501,14 @@ def diff_cyl2car(dUdR, dUdTh, rc, thc, i, j, k):
     dUdY = dUdR * sinTh[np.newaxis, :, np.newaxis] + \
         cosThDr[:, :, np.newaxis]*dUdTh
 
+    dUdX[0, :, :] = dUdX[1,jsym, :]
+    dUdX[:, 0, :] = dUdX[:,-2, :]
+    print('imposed') 
+
+    dUdY[0, :, :] = dUdY[1,jsym, :]
+    dUdY[:, 0, :] = dUdY[:,-2, :]
+ 
+
     return dUdX, dUdY
 
 # -----------------------------------------------------------------------------------
@@ -506,6 +517,8 @@ def diff_cyl2car(dUdR, dUdTh, rc, thc, i, j, k):
 def cyl2car(Ucyl, Vcyl, rc, thc):
 
     i,j,k=Ucyl.shape
+
+    _,jsym,_,_=azi_grid(j)
 
     # note that the velocity is centered
     UcCar = np.zeros([i, j, k])
@@ -517,6 +530,11 @@ def cyl2car(Ucyl, Vcyl, rc, thc):
     UcCar = Ucyl*cosTh[np.newaxis, :, np.newaxis]-sinTh[np.newaxis, :, np.newaxis]*Vcyl
     VcCar = Ucyl*sinTh[np.newaxis, :, np.newaxis]+cosTh[np.newaxis, :, np.newaxis]*Vcyl
 
+    UcCar[0, :, :] = UcCar[1,jsym, :]
+    UcCar[:, 0, :] = UcCar[:,-2, :]
+    VcCar[0, :, :] = VcCar[1,jsym, :]
+    VcCar[:, 0, :] = VcCar[:,-2, :]
+ 
     return UcCar, VcCar
 
 
@@ -562,6 +580,23 @@ def bc(data,var,j,jsym):
 def center(dataU, dataV, dataW):
 
 
+    print('THIS IS WRONG FIX IT USING centerUV')
+    i,j,k=dataU.shape
+
+    # Center velocity
+
+    dataUc = np.zeros([i, j, k])
+    dataUc[:-1, ] = 0.5*(dataU[1:, ]+dataU[0:-1, ])
+
+    dataVc = np.zeros([i, j, k])
+    dataVc[:, :-1, ] = 0.5*(dataV[:, 1:, ]+dataV[:, 0:-1, ])
+
+    dataUc[-1, :, :] = dataU[-1, :, :]
+    dataVc[:, -1, :] = dataV[:, -1, :]
+
+    return dataUc, dataVc
+
+#
     i,j,k=dataU.shape
 
     # Center velocity
@@ -599,9 +634,13 @@ def centerUV(dataU, dataV):
     dataVc = np.zeros([i, j, k])
     dataVc[:, 1:, ] = 0.5*(dataV[:, 1:, ]+dataV[:, 0:-1, ])
 
-    dataUc[0, :, :] = dataU[1,jsym, :]
-    dataVc[:, 0, :] = dataV[:,-2, :]
+    dataUc[0, :, :] = dataUc[1,jsym, :]
 
+    dataUc[:, 0, :] = dataUc[:,-2, :]
+
+    dataVc[:, 0, :] = dataVc[:,-2, :]
+   
+ 
     return dataUc, dataVc
 
 # --------------------------------------------------------------------------
@@ -624,6 +663,8 @@ def centerUV_old(dataU, dataV):
 
     dataUc[-1, :, :] = dataU[-1, :, :]
     dataVc[:, -1, :] = dataV[:, -1, :]
+
+    print('fixed')
 
     return dataUc, dataVc
 
