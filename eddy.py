@@ -1,4 +1,5 @@
 # EDDY:library for postprocessing of Eddy.f
+# Updated: Tue Jan 5 21
 
 import numpy as np
 import struct as st
@@ -503,7 +504,7 @@ def diff_cyl2car(dUdR, dUdTh, rc, thc, i, j, k):
 
     dUdX[0, :, :] = dUdX[1,jsym, :]
     dUdX[:, 0, :] = dUdX[:,-2, :]
-    print('imposed') 
+#    print('imposed') 
 
     dUdY[0, :, :] = dUdY[1,jsym, :]
     dUdY[:, 0, :] = dUdY[:,-2, :]
@@ -580,39 +581,30 @@ def bc(data,var,j,jsym):
 def center(dataU, dataV, dataW):
 
 
-    print('THIS IS WRONG FIX IT USING centerUV')
     i,j,k=dataU.shape
+
+    _,jsym,_,_=azi_grid(j)
 
     # Center velocity
 
     dataUc = np.zeros([i, j, k])
-    dataUc[:-1, ] = 0.5*(dataU[1:, ]+dataU[0:-1, ])
+    dataUc[1:, ] = 0.5*(dataU[0:-1, ]+dataU[1:, ])
 
     dataVc = np.zeros([i, j, k])
-    dataVc[:, :-1, ] = 0.5*(dataV[:, 1:, ]+dataV[:, 0:-1, ])
-
-    dataUc[-1, :, :] = dataU[-1, :, :]
-    dataVc[:, -1, :] = dataV[:, -1, :]
-
-    return dataUc, dataVc
-
-#
-    i,j,k=dataU.shape
-
-    # Center velocity
-
-    dataUc = np.zeros([i, j, k])
-    dataUc[:-1, ] = 0.5*(dataU[1:, ]+dataU[0:-1, ])
-
-    dataVc = np.zeros([i, j, k])
-    dataVc[:, :-1, ] = 0.5*(dataV[:, 1:, ]+dataV[:, 0:-1, ])
+    dataVc[:, 1:, ] = 0.5*(dataV[:, 1:, ]+dataV[:, 0:-1, ])
 
     dataWc = np.zeros([i, j, k])
-    dataWc[:, :, :-1] = 0.5*(dataW[:, :, 1:]+dataW[:, :, 0:-1])
+    dataWc[:, :, 1:] = 0.5*(dataW[:, :, 1:]+dataW[:, :, 0:-1])
 
-    dataUc[-1, :, :] = dataU[-1, :, :]
-    dataVc[:, -1, :] = dataV[:, -1, :]
-    dataWc[:, :, -1] = dataW[:, :, -1]
+    dataUc[0, :, :] = dataUc[1,jsym, :]
+    dataUc[:, 0, :] = dataUc[:,-2, :]
+
+    dataVc[:, 0, :] = dataVc[:,-2, :] 
+
+    dataWc[:, :, 0] = dataWc[:,:,1]
+    dataWc[:, 0, :] = dataWc[:,-2, :]
+
+
 
     return dataUc, dataVc, dataWc
 
