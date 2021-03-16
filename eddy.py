@@ -1,5 +1,6 @@
 # EDDY:library for postprocessing of Eddy.f
-# Updated: Tue Jan 5 21
+# Updated: Tue Jan 7 21
+# Version: fixed center routine
 
 import numpy as np
 import struct as st
@@ -233,6 +234,7 @@ def symmetry(data, var, nyt, full):
 
 
 def grid5p(filename, kmin5p, kmax5p, skip):
+#WARNING: kmin5p,kmax5p are indeces from FORTRAN, from eddy.input
 
     nx, index, x, xe, xc = readgrid(filename)
 
