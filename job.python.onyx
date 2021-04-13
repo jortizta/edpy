@@ -1,0 +1,55 @@
+#!/bin/bash
+#ACCOUNT
+#PBS -A ONRDC29722307
+##PBS -A ONRDC29935310
+
+#QUEUE
+##PBS -q background
+#PBS -q debug
+##PBS -q standard_lw
+##PBS -q standard_sm
+
+#WALL TIME
+#PBS -l walltime=00:01:00
+##PBS -l walltime=00:20:00
+##PBS -l walltime=19:00:00
+
+#NUMBER OF PROCESSORS
+##PBS -l select=1:ncpus=44:mpiprocs=44+1:ncpus=20:mpiprocs=20
+
+#PBS -l select=1:ncpus=44:mpiprocs=1
+
+#STANDARD ERROR
+#PBS -e test.err
+
+#STANDARD OUT
+#PBS -o test.out
+
+#JOB NAME
+#PBS -N test
+
+#RUN
+## CHECK for previous restart files
+
+module unload craype-hugepages2M
+module load cray-python/3.6.5.3
+#module load matlab/R2017b
+#bash modules.sh
+
+
+cd /p/work/jortizta/python_problem/
+
+#module load cseinit
+#module load cse/python3/latest
+#module load cse/numpy/latest
+#module load cse/anaconda3/2020.02
+#conda activate myenv1
+
+module unload craype-hugepages2M
+module load cray-python/3.6.5.3
+
+#source ./load_python.sh
+
+#(source /p/work/jortizta/python_problem/modules.sh)
+
+ccmrun python test_python_numpy.py > logTest
