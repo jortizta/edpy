@@ -201,6 +201,7 @@ def azi_grid(ny):
 
 
 def symmetry(data, var, nyt, full):
+# DEVELOPING STAGE
     ny = int((nyt-2)/4)
 
     if var == 'v':
@@ -282,7 +283,7 @@ def grid5p(filename, kmin5p, kmax5p, skip):
 
 
 # ---------------------------------------------------------------------------
-
+que
 def read5pSqueeze_old(filename, kmin5p, kmax5p, skip):
 
     f = open(filename, 'rb')
@@ -304,7 +305,7 @@ def read5pSqueeze_old(filename, kmin5p, kmax5p, skip):
         dummy1 = st.unpack('i', f.read(4))
         data[:, :, b] = np.reshape(
             st.unpack('d'*i*j, f.read(8*i*j)), (i, j), order='F')
-        dummy2 = st.unpack('i', f.read(4))
+   5     dummy2 = st.unpack('i', f.read(4))
         f.seek(2*sizeVar, 1)
 
         if dummy1 != dummy2:
@@ -556,7 +557,7 @@ def azi_grid(ny):
 
 # --------------------------------------------------------------------------------
 def bc(data,var,j,jsym):
-
+# DEVELOPING STAGE
      data[:,0,:]=data[:,-2,:]
      data[:,-1,:]=data[:,1,:]
 
@@ -606,8 +607,6 @@ def center(dataU, dataV, dataW):
     dataWc[:, :, 0] = dataWc[:,:,1]
     dataWc[:, 0, :] = dataWc[:,-2, :]
 
-
-
     return dataUc, dataVc, dataWc
 
 
@@ -638,30 +637,3 @@ def centerUV(dataU, dataV):
     return dataUc, dataVc
 
 # --------------------------------------------------------------------------
-
-
-
-
-
-def centerUV_old(dataU, dataV):
-
-    i,j,k=dataU.shape
-
-    # Center velocity
-
-    dataUc = np.zeros([i, j, k])
-    dataUc[:-1, ] = 0.5*(dataU[1:, ]+dataU[0:-1, ])
-
-    dataVc = np.zeros([i, j, k])
-    dataVc[:, :-1, ] = 0.5*(dataV[:, 1:, ]+dataV[:, 0:-1, ])
-
-    dataUc[-1, :, :] = dataU[-1, :, :]
-    dataVc[:, -1, :] = dataV[:, -1, :]
-
-    print('fixed')
-
-    return dataUc, dataVc
-
-#---------------------------------------------------------------------------
-
-

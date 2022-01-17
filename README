@@ -1,0 +1,4 @@
+mean_rms.py: computes the mean of the middle planes and the rms. This rms implementation does not compute all the Reynolds stresses.
+mean_full5p.py :  computes the total mean of the 5p planes and the mean of the middle planes. It is slower than mean_rms.py
+rms.py: computes all the Reynolds stresses and the TKE. You need all of them to compute production. 
+production.py: computes production with the results of mean_full5p.py and rms.py
